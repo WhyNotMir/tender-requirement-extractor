@@ -64,3 +64,19 @@ export interface Chunk {
   quantity: string | null; // e.g. "2 St", "1 psch"
   equivalence: boolean | null; // "oder gleichwertig" flag
 }
+
+// A leaf candidate before it is placed into the tree. Carries the grouping path
+// (level1/level2) derived from the document structure.
+export interface CandidateLeaf {
+  bulletPoint: string;
+  descriptionSource: string; // verbatim source text
+  language: string;
+  priority: "must" | "should" | "optional";
+  equivalenceAllowed: boolean | null;
+  confidence: "high" | "medium" | "low";
+  chunkIds: string[];
+  level1Key: string;
+  level1Label: string;
+  level2Key: string;
+  level2Label: string;
+}
