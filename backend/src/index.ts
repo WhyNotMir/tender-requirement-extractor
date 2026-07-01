@@ -10,6 +10,7 @@ import { parseLv } from "./pipeline/parseLv";
 import { buildLeaves } from "./pipeline/leaves";
 import { consolidate } from "./pipeline/consolidate";
 import { assembleTree } from "./pipeline/assemble";
+import { validate } from "./pipeline/validate";
 import { StubProvider } from "./llm/stub";
 import type { Chunk, CandidateLeaf, Line } from "./types/internal";
 
@@ -57,17 +58,20 @@ try {
 
   const consolidated = consolidate(allLeaves);
   const tree = assembleTree(consolidated);
+  const report = validate(tree, allChunks);
 
   const outDir = join(cfg.outputDir, manifest.tenderId);
   await mkdir(outDir, { recursive: true });
   await writeFile(join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
   await writeFile(join(outDir, "chunks.json"), JSON.stringify(allChunks, null, 2));
   await writeFile(join(outDir, "tree.json"), JSON.stringify(tree, null, 2));
+  await writeFile(join(outDir, "coverage-report.json"), JSON.stringify(report, null, 2));
 
   log.info("run", "done", {
     outDir,
     level1: tree.length,
     leaves: consolidated.length,
+    schemaValid: report.schemaValid,
   });
 } catch (error) {
   log.error("run", "fatal", { message: (error as Error).message });
