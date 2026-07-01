@@ -1,4 +1,6 @@
 import "./pdf-quiet";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { parseArgs } from "./config";
 import { log } from "./logger";
 import { ingest } from "./pipeline/ingest";
@@ -7,6 +9,7 @@ import { classify } from "./pipeline/classify";
 import { parseLv } from "./pipeline/parseLv";
 import { buildLeaves } from "./pipeline/leaves";
 import { consolidate } from "./pipeline/consolidate";
+import { assembleTree } from "./pipeline/assemble";
 import { StubProvider } from "./llm/stub";
 import type { Chunk, CandidateLeaf, Line } from "./types/internal";
 
@@ -53,12 +56,18 @@ try {
   }
 
   const consolidated = consolidate(allLeaves);
+  const tree = assembleTree(consolidated);
 
-  log.info("run", "consolidate complete", {
-    files: manifest.files.length,
-    positions: allChunks.filter((c) => c.kind === "position").length,
-    leavesIn: allLeaves.length,
-    leavesOut: consolidated.length,
+  const outDir = join(cfg.outputDir, manifest.tenderId);
+  await mkdir(outDir, { recursive: true });
+  await writeFile(join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
+  await writeFile(join(outDir, "chunks.json"), JSON.stringify(allChunks, null, 2));
+  await writeFile(join(outDir, "tree.json"), JSON.stringify(tree, null, 2));
+
+  log.info("run", "done", {
+    outDir,
+    level1: tree.length,
+    leaves: consolidated.length,
   });
 } catch (error) {
   log.error("run", "fatal", { message: (error as Error).message });
