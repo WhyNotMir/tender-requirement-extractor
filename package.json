@@ -1,0 +1,19 @@
+{
+  "name": "tender-extractor",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Extract a tender (1..n PDFs) into a three-level ProcurementMatchDeliverable tree.",
+  "scripts": {
+    "start": "tsx backend/src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
