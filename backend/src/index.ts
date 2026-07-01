@@ -1,6 +1,7 @@
 import { parseArgs } from "./config";
 import { log } from "./logger";
 import { ingest } from "./pipeline/ingest";
+import { extract } from "./pipeline/extract";
 
 try {
   const cfg = parseArgs(process.argv.slice(2));
@@ -14,9 +15,15 @@ try {
   });
 
   const manifest = await ingest(cfg.inputDir);
-  log.info("run", "ingest complete", {
-    tenderId: manifest.tenderId,
+
+  for (const file of manifest.files) {
+    const extracted = await extract(cfg.inputDir, file);
+    file.pages = extracted.pages;
+  }
+
+  log.info("run", "extract complete", {
     files: manifest.files.length,
+    totalPages: manifest.files.reduce((sum, f) => sum + f.pages, 0),
   });
 } catch (error) {
   log.error("run", "fatal", { message: (error as Error).message });
