@@ -1,15 +1,13 @@
-import { config } from "dotenv";
-import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { parseArgs, envPath } from "./config";
+import { log } from "./logger";
 
-const here = dirname(fileURLToPath(import.meta.url));
-const envPath = resolve(here, "../../env/.env");
-config({ path: envPath });
+const cfg = parseArgs(process.argv.slice(2));
+const hasKey = Boolean(process.env.DEEPSEEK_API_KEY?.trim());
 
-const key = process.env.DEEPSEEK_API_KEY?.trim();
-const keyStatus = key ? `set (${key.slice(0, 4)}…, ${key.length} chars)` : "NOT SET";
-
-console.log(`[boot] env file: ${envPath}`);
-console.log(`[boot] DEEPSEEK_API_KEY: ${keyStatus}`);
-console.log(`[boot] DEEPSEEK_MODEL: ${process.env.DEEPSEEK_MODEL ?? "(default)"}`);
-console.log("[boot] skeleton OK — ready for slice 1");
+log.info("run", "starting tender extractor", {
+  inputDir: cfg.inputDir,
+  outputDir: cfg.outputDir,
+  useLlm: cfg.useLlm,
+  envPath,
+  deepseekKey: hasKey ? "present" : "missing",
+});
