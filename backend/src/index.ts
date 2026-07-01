@@ -12,6 +12,8 @@ import { consolidate } from "./pipeline/consolidate";
 import { assembleTree } from "./pipeline/assemble";
 import { validate } from "./pipeline/validate";
 import { StubProvider } from "./llm/stub";
+import { DeepSeekProvider } from "./llm/deepseek";
+import type { LlmProvider } from "./llm/provider";
 import type { Chunk, CandidateLeaf, Line } from "./types/internal";
 
 function detectLanguage(text: string): "de" | "en" {
@@ -28,7 +30,21 @@ function findModalityLegend(lines: Line[]): string | null {
 
 try {
   const cfg = parseArgs(process.argv.slice(2));
-  const provider = new StubProvider();
+
+  let provider: LlmProvider;
+  if (cfg.useLlm) {
+    const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
+    if (!apiKey) {
+      throw new Error("--use-llm requires DEEPSEEK_API_KEY in env/.env");
+    }
+    provider = new DeepSeekProvider({
+      apiKey,
+      baseUrl: process.env.DEEPSEEK_BASE_URL,
+      model: process.env.DEEPSEEK_MODEL,
+    });
+  } else {
+    provider = new StubProvider();
+  }
 
   log.info("run", "starting tender extractor", {
     inputDir: cfg.inputDir,
@@ -66,6 +82,13 @@ try {
   await writeFile(join(outDir, "chunks.json"), JSON.stringify(allChunks, null, 2));
   await writeFile(join(outDir, "tree.json"), JSON.stringify(tree, null, 2));
   await writeFile(join(outDir, "coverage-report.json"), JSON.stringify(report, null, 2));
+
+  if (provider instanceof DeepSeekProvider) {
+    log.info("run", "llm usage", {
+      ...provider.usage,
+      estimatedCostUsd: provider.estimatedCostUsd(),
+    });
+  }
 
   log.info("run", "done", {
     outDir,
