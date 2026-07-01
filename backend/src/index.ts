@@ -7,6 +7,7 @@ import { ingest } from "./pipeline/ingest";
 import { extract } from "./pipeline/extract";
 import { classify } from "./pipeline/classify";
 import { parseLv } from "./pipeline/parseLv";
+import { parseProse } from "./pipeline/parseProse";
 import { buildLeaves } from "./pipeline/leaves";
 import { consolidate } from "./pipeline/consolidate";
 import { assembleTree } from "./pipeline/assemble";
@@ -65,10 +66,16 @@ try {
 
     const { contentLines } = classify(extracted.lines, extracted.pageInfo);
     const { chunks, titles, groups } = parseLv(file.fileId, contentLines);
-    allChunks.push(...chunks);
+
+    // No position grammar matched -> prose tender; extract from numbered lists.
+    const fileChunks =
+      chunks.some((c) => c.kind === "position")
+        ? chunks
+        : [...chunks, ...parseProse(file.fileId, contentLines, extracted.pageInfo)];
+    allChunks.push(...fileChunks);
 
     const legend = findModalityLegend(contentLines);
-    const leaves = await buildLeaves(file.fileId, file.language, chunks, titles, groups, provider, legend);
+    const leaves = await buildLeaves(file.fileId, file.language, fileChunks, titles, groups, provider, legend);
     allLeaves.push(...leaves);
   }
 

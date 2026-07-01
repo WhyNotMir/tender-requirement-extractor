@@ -63,6 +63,7 @@ export interface Chunk {
   text: string; // full text of the block
   quantity: string | null; // e.g. "2 St", "1 psch"
   equivalence: boolean | null; // "oder gleichwertig" flag
+  section?: string | null; // prose section heading, for tenders without OZ codes
 }
 
 // A leaf candidate before it is placed into the tree. Carries the grouping path

@@ -13,14 +13,26 @@ export async function buildLeaves(
   provider: LlmProvider,
   modalityLegend: string | null,
 ): Promise<CandidateLeaf[]> {
-  const positions = chunks.filter((c) => c.kind === "position");
+  const items = chunks.filter((c) => c.kind === "position" || c.kind === "paragraph");
   const leaves: CandidateLeaf[] = [];
 
-  for (const chunk of positions) {
-    const oz = chunk.ozCode ?? "";
-    const l1 = oz.slice(0, 2); // "01"
-    const l2 = oz.split(".").slice(0, 2).join("."); // "01.01"
+  for (const chunk of items) {
     const enriched = await provider.enrichLeaf({ chunk, modalityLegend, language });
+
+    // Grouping path: from the OZ code (LV) or the section heading (prose).
+    let level1Key: string, level1Label: string, level2Key: string, level2Label: string;
+    if (chunk.ozCode) {
+      level1Key = chunk.ozCode.slice(0, 2);
+      level2Key = chunk.ozCode.split(".").slice(0, 2).join(".");
+      level1Label = titles.get(level1Key) ?? `Title ${level1Key}`;
+      level2Label = groups.get(level2Key) ?? `Group ${level2Key}`;
+    } else {
+      const section = chunk.section ?? "Specification";
+      level1Key = section;
+      level1Label = section;
+      level2Key = `${section}:req`;
+      level2Label = "Requirements";
+    }
 
     leaves.push({
       bulletPoint: chunk.quantity ? `${enriched.bulletPoint} (${chunk.quantity})` : enriched.bulletPoint,
@@ -30,10 +42,10 @@ export async function buildLeaves(
       equivalenceAllowed: enriched.equivalenceAllowed,
       confidence: enriched.confidence,
       chunkIds: [chunk.id],
-      level1Key: l1,
-      level1Label: titles.get(l1) ?? `Title ${l1}`,
-      level2Key: l2,
-      level2Label: groups.get(l2) ?? `Group ${l2}`,
+      level1Key,
+      level1Label,
+      level2Key,
+      level2Label,
     });
   }
 
