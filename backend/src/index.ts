@@ -6,6 +6,7 @@ import { extract } from "./pipeline/extract";
 import { classify } from "./pipeline/classify";
 import { parseLv } from "./pipeline/parseLv";
 import { buildLeaves } from "./pipeline/leaves";
+import { consolidate } from "./pipeline/consolidate";
 import { StubProvider } from "./llm/stub";
 import type { Chunk, CandidateLeaf, Line } from "./types/internal";
 
@@ -51,10 +52,13 @@ try {
     allLeaves.push(...leaves);
   }
 
-  log.info("run", "leaves complete", {
+  const consolidated = consolidate(allLeaves);
+
+  log.info("run", "consolidate complete", {
     files: manifest.files.length,
     positions: allChunks.filter((c) => c.kind === "position").length,
-    leaves: allLeaves.length,
+    leavesIn: allLeaves.length,
+    leavesOut: consolidated.length,
   });
 } catch (error) {
   log.error("run", "fatal", { message: (error as Error).message });
