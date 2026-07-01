@@ -2,14 +2,22 @@ import { log } from "../logger";
 import type { Line, Chunk } from "../types/internal";
 
 // Structure-first: the position-number grammar carries the tree, so we recover
-// leaf candidates deterministically before any LLM is involved. Supports GAEB OZ
-// (NN.NN.NNNN) plus the title (NN) and group (NN.NN) levels above it.
+// leaf candidates deterministically before any LLM is involved. Two grammars:
+// GAEB OZ (NN.NN.NNNN, Fahrradgaragen) and Salzburg's room-coded scheme
+// (e.g. GU.20.05.01.01), where the code is glued to the title with no space.
 
 const cleanLabel = (s: string) => s.replace(/[.\s]+$/g, "").replace(/\s+/g, " ").trim();
 
+// GAEB grammar.
 const RE_POSITION = /^(\d{2}\.\d{2}\.\d{4})\s+(.*)$/;
 const RE_GROUP = /^(\d{2}\.\d{2})\s+(.*)$/;
 const RE_TITLE = /^(\d{2})\s+(.+)$/;
+
+// Salzburg room-coded grammar: 2-char prefix (letter + letter/digit) then four
+// two-digit segments for a position, one or two for a group header. Positions
+// have no space before the title; group headers do.
+const RE_POSITION_ROOM = /^([A-ZÄÖÜ][A-ZÄÖÜ0-9](?:\.\d{2}){4})\s*(.*)$/;
+const RE_GROUP_ROOM = /^([A-ZÄÖÜ][A-ZÄÖÜ0-9](?:\.\d{2}){1,2})\s+(.*)$/;
 const RE_QTY = /^([\d.,]+)\s*(St|Stk|psch|pausch|m²|m2|m³|lfm|kg|Stck|Stück|h|Pa)\b/i;
 const RE_RECAP_LINE = /^(summe|zusammenstellung|übertrag)\b/i;
 
@@ -58,14 +66,14 @@ export function parseLv(fileId: string, contentLines: Line[]): ParsedLv {
     const t = l.text.trim();
     if (!t) continue;
 
-    const mPos = t.match(RE_POSITION);
+    const mPos = t.match(RE_POSITION) ?? t.match(RE_POSITION_ROOM);
     if (mPos) {
       flush();
       cur = { code: mPos[1]!, page: l.page, title: (mPos[2] ?? "").trim(), body: [], qty: null };
       continue;
     }
 
-    const mGroup = t.match(RE_GROUP);
+    const mGroup = t.match(RE_GROUP) ?? t.match(RE_GROUP_ROOM);
     if (mGroup) {
       flush(); // a group header closes any open position
       groups.set(mGroup[1]!, cleanLabel(mGroup[2] ?? ""));
