@@ -4,6 +4,8 @@ import { log } from "./logger";
 import { ingest } from "./pipeline/ingest";
 import { extract } from "./pipeline/extract";
 import { classify } from "./pipeline/classify";
+import { parseLv } from "./pipeline/parseLv";
+import type { Chunk } from "./types/internal";
 
 try {
   const cfg = parseArgs(process.argv.slice(2));
@@ -17,16 +19,19 @@ try {
   });
 
   const manifest = await ingest(cfg.inputDir);
+  const allChunks: Chunk[] = [];
 
   for (const file of manifest.files) {
     const extracted = await extract(cfg.inputDir, file);
     file.pages = extracted.pages;
-    classify(extracted.lines, extracted.pageInfo);
+    const { contentLines } = classify(extracted.lines, extracted.pageInfo);
+    const { chunks } = parseLv(file.fileId, contentLines);
+    allChunks.push(...chunks);
   }
 
-  log.info("run", "classify complete", {
+  log.info("run", "parse complete", {
     files: manifest.files.length,
-    totalPages: manifest.files.reduce((sum, f) => sum + f.pages, 0),
+    positions: allChunks.filter((c) => c.kind === "position").length,
   });
 } catch (error) {
   log.error("run", "fatal", { message: (error as Error).message });

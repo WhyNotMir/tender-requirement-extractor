@@ -43,3 +43,24 @@ export interface PageInfo {
   charCount: number;
   method: "text" | "ocr" | "image_only";
 }
+
+export type ChunkKind =
+  | "position" // an LV position block -> requirement candidate
+  | "paragraph" // prose obligation
+  | "checklist" // a required-document row
+  | "preamble" // general condition from the preamble
+  | "recap" // commercial summary -> validation only, never a leaf
+  | "chrome" // header/footer noise
+  | "void"; // "Entfällt" dummy -> filtered
+
+export interface Chunk {
+  id: string; // `${fileId}:p${page}:${ozCode|blockIdx}`
+  fileId: string;
+  page: number;
+  kind: ChunkKind;
+  ozCode: string | null; // LV position number when present
+  title: string | null; // heading line of the block
+  text: string; // full text of the block
+  quantity: string | null; // e.g. "2 St", "1 psch"
+  equivalence: boolean | null; // "oder gleichwertig" flag
+}
