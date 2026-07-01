@@ -1,7 +1,9 @@
+import "./pdf-quiet";
 import { parseArgs } from "./config";
 import { log } from "./logger";
 import { ingest } from "./pipeline/ingest";
 import { extract } from "./pipeline/extract";
+import { classify } from "./pipeline/classify";
 
 try {
   const cfg = parseArgs(process.argv.slice(2));
@@ -19,9 +21,10 @@ try {
   for (const file of manifest.files) {
     const extracted = await extract(cfg.inputDir, file);
     file.pages = extracted.pages;
+    classify(extracted.lines, extracted.pageInfo);
   }
 
-  log.info("run", "extract complete", {
+  log.info("run", "classify complete", {
     files: manifest.files.length,
     totalPages: manifest.files.reduce((sum, f) => sum + f.pages, 0),
   });

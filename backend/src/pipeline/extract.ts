@@ -4,14 +4,6 @@ import { log } from "../logger";
 import type { Line, PageInfo, FileEntry } from "../types/internal";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
-// pdfjs prints canvas-polyfill warnings that are irrelevant to text extraction
-// and pollute the JSON log stream; drop just those, keep everything else.
-const originalWarn = console.warn.bind(console);
-console.warn = (...args: unknown[]) => {
-  if (String(args[0] ?? "").includes("Cannot polyfill")) return;
-  originalWarn(...args);
-};
-
 export interface ExtractedFile {
   fileId: string;
   pages: number;
