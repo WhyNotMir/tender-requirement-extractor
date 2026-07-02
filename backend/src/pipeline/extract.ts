@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { log } from "../logger";
 import type { Line, PageInfo, FileEntry } from "../types/internal";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+import { ocrPage } from "./ocr";
 
 export interface ExtractedFile {
   fileId: string;
@@ -54,7 +55,8 @@ function reconstructLines(
 }
 
 export async function extract(inputDir: string, file: FileEntry): Promise<ExtractedFile> {
-  const data = new Uint8Array(await readFile(join(inputDir, file.filename)));
+  const pdfPath = join(inputDir, file.filename);
+  const data = new Uint8Array(await readFile(pdfPath));
   const doc = await getDocument({ data, useSystemFonts: false, verbosity: 0 }).promise;
 
   const lines: Line[] = [];
@@ -88,10 +90,36 @@ export async function extract(inputDir: string, file: FileEntry): Promise<Extrac
     }
   }
 
+  // OCR fallback: re-read corrupted pages from a rendered image, which bypasses
+  // the broken font mapping. Best-effort — if the tools are missing we keep the
+  // flagged text.
+  for (const pi of pageInfo) {
+    if (pi.textQuality !== "corrupted") continue;
+    const text = await ocrPage(pdfPath, pi.page);
+    if (!text) continue;
+    const ocrLines = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    if (ocrLines.length === 0) continue;
+
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i]!.page === pi.page) lines.splice(i, 1);
+    }
+    ocrLines.forEach((t, i) => lines.push({ page: pi.page, y: 10000 - i, x: 0, text: t }));
+
+    pi.method = "ocr";
+    pi.charCount = text.length;
+    pi.textQuality = scoreQuality(text);
+    log.info("extract", `page ${pi.page} re-read via OCR`, {
+      fileId: file.fileId,
+      quality: pi.textQuality,
+      chars: text.length,
+    });
+  }
+
   log.info("extract", `extracted ${doc.numPages} page(s)`, {
     fileId: file.fileId,
     corrupted: pageInfo.filter((pi) => pi.textQuality === "corrupted").length,
     imageOnly: pageInfo.filter((pi) => pi.textQuality === "image_only").length,
+    ocrPages: pageInfo.filter((pi) => pi.method === "ocr").length,
   });
   return { fileId: file.fileId, pages: doc.numPages, lines, pageInfo };
 }
