@@ -10,6 +10,7 @@ import { parseLv } from "./pipeline/parseLv";
 import { parseProse } from "./pipeline/parseProse";
 import { buildLeaves } from "./pipeline/leaves";
 import { consolidate } from "./pipeline/consolidate";
+import { resolveReferences } from "./pipeline/resolveReferences";
 import { assembleTree } from "./pipeline/assemble";
 import { validate } from "./pipeline/validate";
 import { StubProvider } from "./llm/stub";
@@ -80,6 +81,7 @@ try {
   }
 
   const consolidated = consolidate(allLeaves);
+  const refReport = resolveReferences(consolidated, manifest);
   const tree = assembleTree(consolidated);
   const report = validate(tree, allChunks);
 
@@ -89,6 +91,7 @@ try {
   await writeFile(join(outDir, "chunks.json"), JSON.stringify(allChunks, null, 2));
   await writeFile(join(outDir, "tree.json"), JSON.stringify(tree, null, 2));
   await writeFile(join(outDir, "coverage-report.json"), JSON.stringify(report, null, 2));
+  await writeFile(join(outDir, "references.json"), JSON.stringify(refReport, null, 2));
 
   if (provider instanceof DeepSeekProvider) {
     log.info("run", "llm usage", {
