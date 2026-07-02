@@ -68,8 +68,11 @@ export function parseLv(fileId: string, contentLines: Line[]): ParsedLv {
 
     const mPos = t.match(RE_POSITION) ?? t.match(RE_POSITION_ROOM);
     if (mPos) {
+      const title = (mPos[2] ?? "").trim();
+      // Skip the preamble's legend examples that explain the numbering scheme.
+      if (/^H\s|laufende Nr|definiert die Obergruppe|Obergruppenunter/i.test(title)) continue;
       flush();
-      cur = { code: mPos[1]!, page: l.page, title: (mPos[2] ?? "").trim(), body: [], qty: null };
+      cur = { code: mPos[1]!, page: l.page, title, body: [], qty: null };
       continue;
     }
 

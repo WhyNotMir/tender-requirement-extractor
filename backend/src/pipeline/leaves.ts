@@ -22,10 +22,20 @@ export async function buildLeaves(
     // Grouping path: from the OZ code (LV) or the section heading (prose).
     let level1Key: string, level1Label: string, level2Key: string, level2Label: string;
     if (chunk.ozCode) {
+      const parts = chunk.ozCode.split(".");
+      const roomCoded = /[A-Za-zÄÖÜäöü]/.test(parts[0] ?? "");
       level1Key = chunk.ozCode.slice(0, 2);
-      level2Key = chunk.ozCode.split(".").slice(0, 2).join(".");
-      level1Label = titles.get(level1Key) ?? `Title ${level1Key}`;
-      level2Label = groups.get(level2Key) ?? `Group ${level2Key}`;
+      level1Label = titles.get(level1Key) ?? `Section ${level1Key}`;
+      if (roomCoded) {
+        // Salzburg: floor -> subgroup (3-part key carries a captured label).
+        const subKey = parts.slice(0, 3).join(".");
+        const ogKey = parts.slice(0, 2).join(".");
+        level2Key = subKey;
+        level2Label = groups.get(subKey) ?? groups.get(ogKey) ?? `Group ${subKey}`;
+      } else {
+        level2Key = parts.slice(0, 2).join(".");
+        level2Label = groups.get(level2Key) ?? `Group ${level2Key}`;
+      }
     } else {
       const section = chunk.section ?? "Specification";
       level1Key = section;

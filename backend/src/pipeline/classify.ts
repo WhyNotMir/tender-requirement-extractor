@@ -4,6 +4,10 @@ import type { Line, PageInfo, PageKind } from "../types/internal";
 // Normalize a line so repeated chrome collapses to one key: digits -> "#".
 const norm = (s: string) => s.replace(/\d+/g, "#").replace(/\s+/g, " ").trim().toLowerCase();
 
+// A line that starts with a position/group code is content, never chrome — even
+// when identical position templates repeat across many rooms.
+const CODE_LINE = /^(\d{2}\.\d{2}\.\d{4}|[A-ZÄÖÜ][A-ZÄÖÜ0-9](?:\.\d{2}){2,4})/;
+
 export interface ClassifyResult {
   contentLines: Line[];
   chromeKeys: Set<string>;
@@ -15,6 +19,7 @@ export interface ClassifyResult {
 function detectChrome(lines: Line[], pages: number): Set<string> {
   const counts = new Map<string, number>();
   for (const l of lines) {
+    if (CODE_LINE.test(l.text.trim())) continue; // never treat coded positions as chrome
     const k = norm(l.text);
     if (k.length < 4) continue;
     counts.set(k, (counts.get(k) ?? 0) + 1);
