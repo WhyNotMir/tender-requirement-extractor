@@ -1,0 +1,30 @@
+{
+  "tenderId": "tender_analytics",
+  "createdAt": "2026-07-06T01:26:22.992Z",
+  "files": [
+    {
+      "fileId": "lv_fahrradgaragen_1",
+      "filename": "LV_Fahrradgaragen (1).pdf",
+      "pages": 6,
+      "sha256": "689e7bff5f256463a28b473aa3b2bf869a07335f3e086569c9a539f2a0eec07f",
+      "roleGuess": "main_lv",
+      "language": "de"
+    },
+    {
+      "fileId": "salzburg_laboratory_tender",
+      "filename": "Salzburg Laboratory Tender.pdf",
+      "pages": 409,
+      "sha256": "aabb27ad6dddf24d746d0a6e1ac1b3588fa0b01f4063013b6bbbd5f2cff8ff59",
+      "roleGuess": "main_lv",
+      "language": "de"
+    },
+    {
+      "fileId": "tender_for_christmas_lights_installation",
+      "filename": "Tender_For_Christmas_Lights_Installation_2026.pdf",
+      "pages": 5,
+      "sha256": "c9f175a6b17beaddadc8fe17460a5e855b5344f8ec81a43a421c2f4881ae1d2e",
+      "roleGuess": "main_lv",
+      "language": "en"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schemaValid": true,
+  "totalContentChunks": 1578,
+  "referencedChunks": 1578,
+  "orphanChunks": [],
+  "leafCount": 1103,
+  "lowConfidenceLeaves": 0,
+  "mustLeaves": 1102,
+  "avgGrounding": 0.862,
+  "lowGroundingLeaves": 93
+}

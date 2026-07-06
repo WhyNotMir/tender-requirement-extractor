@@ -1,0 +1,43 @@
+{
+  "scannedLeaves": 1103,
+  "internalResolved": 0,
+  "externalUnresolved": 9,
+  "unresolved": [
+    {
+      "leafBulletPoint": "Modbus Anbindung",
+      "reference": "Protokoll"
+    },
+    {
+      "leafBulletPoint": "Gasarmatur, Acetylen",
+      "reference": "Montageplanung"
+    },
+    {
+      "leafBulletPoint": "Verdunkelungsvorhang, deckenmontiert",
+      "reference": "Grundrissplan"
+    },
+    {
+      "leafBulletPoint": "Gasarmatur, He, Schlauchtülle",
+      "reference": "Montageplanung"
+    },
+    {
+      "leafBulletPoint": "Gasarmatur, He, Schlauchtülle",
+      "reference": "Montageplanung"
+    },
+    {
+      "leafBulletPoint": "Auffangwanne",
+      "reference": "Montageplanfreigabe"
+    },
+    {
+      "leafBulletPoint": "Verdunkelungsvorhang, deckenmontiert",
+      "reference": "Grundrissplan"
+    },
+    {
+      "leafBulletPoint": "Verdunkelungsvorhang, deckenmontiert",
+      "reference": "Grundrissplan"
+    },
+    {
+      "leafBulletPoint": "Verdunkelungsvorhang, deckenmontiert",
+      "reference": "Grundrissplan"
+    }
+  ]
+}

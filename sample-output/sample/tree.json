@@ -1,0 +1,218 @@
+[
+  {
+    "bulletPoint": "Fahrradgaragen Marienkirchplatz",
+    "description": {
+      "de": "Fahrradgaragen Marienkirchplatz"
+    },
+    "priority": "must",
+    "confidence": null,
+    "equivalenceAllowed": null,
+    "deliverableArray": [
+      {
+        "bulletPoint": "Fahrradgaragen",
+        "description": {
+          "de": "Fahrradgaragen"
+        },
+        "priority": "must",
+        "confidence": null,
+        "equivalenceAllowed": null,
+        "deliverableArray": [
+          {
+            "bulletPoint": "Fahrradgaragen Lieferung und Montage",
+            "description": {
+              "de": "Liefern und Montieren einer Fahrradgarage im Baukastensystem für 3 separat abschließbare Einzelgaragen nach DIN 79008, ADFC-zertifiziertes System."
+            },
+            "priority": "must",
+            "confidence": "high",
+            "equivalenceAllowed": null,
+            "deliverableArray": [],
+            "procurementDocumentChunkIdArray": [
+              "lv_fahrradgaragen_1:p3:01.01.0010"
+            ],
+            "fullfillable": null,
+            "status": "waitingForAnalysis",
+            "aiReasoning": null,
+            "feedback": null,
+            "feedbackText": null,
+            "openQuestionId": null,
+            "workspaceDocumentChunkIdArray": [],
+            "citedProductIdArray": [],
+            "citedPersonIdArray": []
+          },
+          {
+            "bulletPoint": "Fahrradhalter mit Einfahrtschiene",
+            "description": {
+              "de": "Fahrradhalter mit Einfahrtschiene aus Edelstahl zur komfortablen Führung der Räder liefern und montieren, für Reifenbreite von 25 bis 65mm, Vorderradhalter zur Arretierung des Rades und Verhinderung des Herausrollens."
+            },
+            "priority": "must",
+            "confidence": "high",
+            "equivalenceAllowed": true,
+            "deliverableArray": [],
+            "procurementDocumentChunkIdArray": [
+              "lv_fahrradgaragen_1:p4:01.01.0020"
+            ],
+            "fullfillable": null,
+            "status": "waitingForAnalysis",
+            "aiReasoning": null,
+            "feedback": null,
+            "feedbackText": null,
+            "openQuestionId": null,
+            "workspaceDocumentChunkIdArray": [],
+            "citedProductIdArray": [],
+            "citedPersonIdArray": []
+          },
+          {
+            "bulletPoint": "LED light bar",
+            "description": {
+              "de": "schwenkbare LED-Lichtleiste liefern und montieren, batteriebetrieben, mit integriertem Bewegungsensor und energiesparender Zeitschaltung"
+            },
+            "priority": "must",
+            "confidence": "high",
+            "equivalenceAllowed": null,
+            "deliverableArray": [],
+            "procurementDocumentChunkIdArray": [
+              "lv_fahrradgaragen_1:p4:01.01.0050"
+            ],
+            "fullfillable": null,
+            "status": "waitingForAnalysis",
+            "aiReasoning": null,
+            "feedback": null,
+            "feedbackText": null,
+            "openQuestionId": null,
+            "workspaceDocumentChunkIdArray": [],
+            "citedProductIdArray": [],
+            "citedPersonIdArray": []
+          },
+          {
+            "bulletPoint": "Antigraffitischutz",
+            "description": {
+              "de": "Beschichtung mit Antigraffiti-Pulver PU, DB-Zertifizierung, Farbe RAL 7016 anthrazitgrau"
+            },
+            "priority": "must",
+            "confidence": "high",
+            "equivalenceAllowed": false,
+            "deliverableArray": [],
+            "procurementDocumentChunkIdArray": [
+              "lv_fahrradgaragen_1:p4:01.01.0060"
+            ],
+            "fullfillable": null,
+            "status": "waitingForAnalysis",
+            "aiReasoning": null,
+            "feedback": null,
+            "feedbackText": null,
+            "openQuestionId": null,
+            "workspaceDocumentChunkIdArray": [],
+            "citedProductIdArray": [],
+            "citedPersonIdArray": []
+          }
+        ],
+        "procurementDocumentChunkIdArray": [],
+        "fullfillable": null,
+        "status": "waitingForAnalysis",
+        "aiReasoning": null,
+        "feedback": null,
+        "feedbackText": null,
+        "openQuestionId": null,
+        "workspaceDocumentChunkIdArray": [],
+        "citedProductIdArray": [],
+        "citedPersonIdArray": []
+      }
+    ],
+    "procurementDocumentChunkIdArray": [],
+    "fullfillable": null,
+    "status": "waitingForAnalysis",
+    "aiReasoning": null,
+    "feedback": null,
+    "feedbackText": null,
+    "openQuestionId": null,
+    "workspaceDocumentChunkIdArray": [],
+    "citedProductIdArray": [],
+    "citedPersonIdArray": []
+  },
+  {
+    "bulletPoint": "Buchungsplattform",
+    "description": {
+      "de": "Buchungsplattform"
+    },
+    "priority": "must",
+    "confidence": null,
+    "equivalenceAllowed": null,
+    "deliverableArray": [
+      {
+        "bulletPoint": "Buchungsplattform",
+        "description": {
+          "de": "Buchungsplattform"
+        },
+        "priority": "must",
+        "confidence": null,
+        "equivalenceAllowed": null,
+        "deliverableArray": [
+          {
+            "bulletPoint": "Lieferung und Einrichtung der Buchungsplattform (1 psch)",
+            "description": {
+              "de": "Digitale, cloudbasierte Buchungsplattform liefern, installieren und einrichten, ausschließlich nutzbar per Smartphone-App (iOS / Android) und mehrstufigen KI-basierten und telefonischen Kundensupport, ohne stationären Terminal vor Ort."
+            },
+            "priority": "must",
+            "confidence": "high",
+            "equivalenceAllowed": null,
+            "deliverableArray": [],
+            "procurementDocumentChunkIdArray": [
+              "lv_fahrradgaragen_1:p4:02.02.0010"
+            ],
+            "fullfillable": null,
+            "status": "waitingForAnalysis",
+            "aiReasoning": null,
+            "feedback": null,
+            "feedbackText": null,
+            "openQuestionId": null,
+            "workspaceDocumentChunkIdArray": [],
+            "citedProductIdArray": [],
+            "citedPersonIdArray": []
+          },
+          {
+            "bulletPoint": "Nutzungsgebühr",
+            "description": {
+              "de": "Nutzungsgebühr des Nutzer- und Betreiber-Web-Portal sowie Smartphone-App, inkl. Betrieb und Wartung des Servers, regelmäßige UpDates, Telefon-/remote-Support. Gebühr je digitalen Schließzylinder für 60 Monate."
+            },
+            "priority": "must",
+            "confidence": "high",
+            "equivalenceAllowed": null,
+            "deliverableArray": [],
+            "procurementDocumentChunkIdArray": [
+              "lv_fahrradgaragen_1:p5:02.02.0020"
+            ],
+            "fullfillable": null,
+            "status": "waitingForAnalysis",
+            "aiReasoning": null,
+            "feedback": null,
+            "feedbackText": null,
+            "openQuestionId": null,
+            "workspaceDocumentChunkIdArray": [],
+            "citedProductIdArray": [],
+            "citedPersonIdArray": []
+          }
+        ],
+        "procurementDocumentChunkIdArray": [],
+        "fullfillable": null,
+        "status": "waitingForAnalysis",
+        "aiReasoning": null,
+        "feedback": null,
+        "feedbackText": null,
+        "openQuestionId": null,
+        "workspaceDocumentChunkIdArray": [],
+        "citedProductIdArray": [],
+        "citedPersonIdArray": []
+      }
+    ],
+    "procurementDocumentChunkIdArray": [],
+    "fullfillable": null,
+    "status": "waitingForAnalysis",
+    "aiReasoning": null,
+    "feedback": null,
+    "feedbackText": null,
+    "openQuestionId": null,
+    "workspaceDocumentChunkIdArray": [],
+    "citedProductIdArray": [],
+    "citedPersonIdArray": []
+  }
+]
