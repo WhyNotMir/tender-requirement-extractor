@@ -1,7 +1,7 @@
 import type { Chunk, CandidateLeaf } from "../types/internal";
 
 // The pipeline talks to any LLM only through this interface. The deterministic
-// stub implements it with zero network calls; a DeepSeek adapter implements the
+// stub implements it with zero network calls; an OpenAI-compatible HTTP adapter
 // same shape later without touching any pipeline stage.
 
 export interface EnrichInput {
