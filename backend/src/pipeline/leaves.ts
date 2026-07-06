@@ -1,6 +1,29 @@
 import { log } from "../logger";
 import type { Chunk, CandidateLeaf } from "../types/internal";
 import type { LlmProvider } from "../llm/provider";
+import { StubProvider } from "../llm/stub";
+
+export interface BuildOptions {
+  concurrency: number;
+  budget?: { remaining: number }; // shared LLM-call budget; undefined = unlimited
+}
+
+// Run an async mapper over items with a bounded number of concurrent workers,
+// preserving input order in the result.
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]!);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+const stubFallback = new StubProvider();
 
 // Turn requirement chunks into candidate leaves via the provider. Grouping keys
 // come from the OZ code so the tree mirrors the document's own structure.
@@ -12,12 +35,16 @@ export async function buildLeaves(
   groups: Map<string, string>,
   provider: LlmProvider,
   modalityLegend: string | null,
+  opts: BuildOptions = { concurrency: 1 },
 ): Promise<CandidateLeaf[]> {
   const items = chunks.filter((c) => c.kind === "position" || c.kind === "paragraph");
-  const leaves: CandidateLeaf[] = [];
 
-  for (const chunk of items) {
-    const enriched = await provider.enrichLeaf({ chunk, modalityLegend, language });
+  const leaves = await mapLimit(items, opts.concurrency, async (chunk) => {
+    // Spend the LLM budget first; beyond it, fall back to the deterministic stub.
+    const useLlm = !opts.budget || opts.budget.remaining > 0;
+    if (opts.budget && useLlm) opts.budget.remaining -= 1;
+    const active = useLlm ? provider : stubFallback;
+    const enriched = await active.enrichLeaf({ chunk, modalityLegend, language });
 
     // Grouping path: from the OZ code (LV) or the section heading (prose).
     let level1Key: string, level1Label: string, level2Key: string, level2Label: string;
@@ -44,7 +71,7 @@ export async function buildLeaves(
       level2Label = "Requirements";
     }
 
-    leaves.push({
+    const leaf: CandidateLeaf = {
       bulletPoint: chunk.quantity ? `${enriched.bulletPoint} (${chunk.quantity})` : enriched.bulletPoint,
       descriptionSource: enriched.description,
       language,
@@ -56,8 +83,9 @@ export async function buildLeaves(
       level1Label,
       level2Key,
       level2Label,
-    });
-  }
+    };
+    return leaf;
+  });
 
   log.info("leaves", "built candidate leaves", {
     fileId,

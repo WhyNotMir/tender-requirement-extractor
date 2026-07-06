@@ -63,36 +63,63 @@ export class DeepSeekProvider implements LlmProvider {
     user: string,
     schema: z.ZodType<T>,
   ): Promise<T> {
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0,
-        max_tokens: 1600,
-      }),
-      signal: AbortSignal.timeout(90_000),
-    });
+    const MAX_RETRIES = 8;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const backoff = (n: number) => Math.min(1000 * 2 ** n, 30_000) + Math.floor(Math.random() * 400);
 
-    if (!response.ok) {
-      const body = (await response.text()).slice(0, 500);
-      if (response.status === 401) {
+    let response: Response | undefined;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        response = await fetch(`${this.baseUrl}/chat/completions`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: this.model,
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0,
+            max_tokens: 1600,
+          }),
+          signal: AbortSignal.timeout(90_000),
+        });
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          await sleep(backoff(attempt));
+          continue;
+        }
+        throw error;
+      }
+
+      // Rate limit / transient server errors -> back off and retry. Honor the
+      // Retry-After header, or the "try again in Xs" hint some providers put in
+      // the body (Groq's token-per-minute limit does this).
+      if ((response.status === 429 || response.status >= 500) && attempt < MAX_RETRIES) {
+        const body = await response.text().catch(() => "");
+        const headerRA = Number(response.headers.get("retry-after"));
+        const bodyRA = Number(body.match(/try again in ([\d.]+)\s*s/i)?.[1]);
+        const waitMs =
+          headerRA > 0 ? headerRA * 1000 : bodyRA > 0 ? Math.ceil(bodyRA * 1000) + 400 : backoff(attempt);
+        log.warn(stage, `provider ${response.status}; retrying`, { attempt: attempt + 1, waitMs });
+        await sleep(waitMs);
+        continue;
+      }
+      break;
+    }
+
+    if (!response!.ok) {
+      const body = (await response!.text()).slice(0, 500);
+      if (response!.status === 401) {
         throw new Error(
           `DeepSeek rejected the API key (401). Check DEEPSEEK_API_KEY in env/.env — it may be wrong or expired. ${body}`,
         );
       }
-      throw new Error(`DeepSeek API ${response.status} ${response.statusText}: ${body}`);
+      throw new Error(`DeepSeek API ${response!.status} ${response!.statusText}: ${body}`);
     }
 
-    const api = ApiResponse.parse(await response.json());
+    const api = ApiResponse.parse(await response!.json());
     this.usage.calls += 1;
     if (api.usage) {
       this.usage.promptTokens += api.usage.prompt_tokens;

@@ -6,6 +6,8 @@ export interface RunConfig {
   inputDir: string;
   outputDir: string;
   useLlm: boolean;
+  llmConcurrency: number;
+  llmMax: number; // max LLM-enriched leaves for the whole run; Infinity = no cap
 }
 
 // Load env/.env once, centrally, resolved relative to this file.
@@ -30,11 +32,15 @@ export function parseArgs(argv: string[]): RunConfig {
 
   const inputDir = args.get("input");
   if (!inputDir) {
-    throw new Error("Usage: npm start -- --input <tenderFolder> [--output <dir>] [--use-llm]");
+    throw new Error(
+      "Usage: npm start -- --input <tenderFolder> [--output <dir>] [--use-llm] [--llm-concurrency N] [--llm-max N]",
+    );
   }
   return {
     inputDir,
     outputDir: args.get("output") ?? "output",
     useLlm: args.get("use-llm") === "true",
+    llmConcurrency: Math.max(1, Number(args.get("llm-concurrency")) || 6),
+    llmMax: args.has("llm-max") ? Number(args.get("llm-max")) : Infinity,
   };
 }

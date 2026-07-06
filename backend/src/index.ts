@@ -59,6 +59,8 @@ try {
   const manifest = await ingest(cfg.inputDir);
   const allChunks: Chunk[] = [];
   const allLeaves: CandidateLeaf[] = [];
+  const budget = Number.isFinite(cfg.llmMax) ? { remaining: cfg.llmMax } : undefined;
+  const buildOpts = { concurrency: cfg.useLlm ? cfg.llmConcurrency : 1, budget };
 
   for (const file of manifest.files) {
     const extracted = await extract(cfg.inputDir, file);
@@ -76,7 +78,7 @@ try {
     allChunks.push(...fileChunks);
 
     const legend = findModalityLegend(contentLines);
-    const leaves = await buildLeaves(file.fileId, file.language, fileChunks, titles, groups, provider, legend);
+    const leaves = await buildLeaves(file.fileId, file.language, fileChunks, titles, groups, provider, legend, buildOpts);
     allLeaves.push(...leaves);
   }
 
