@@ -70,20 +70,23 @@ try {
 
     const { contentLines } = classify(extracted.lines, extracted.pageInfo);
     const { chunks, titles, groups } = parseLv(file.fileId, contentLines);
+    const hasPositions = chunks.some((c) => c.kind === "position");
 
     // No position grammar matched -> prose tender; extract from numbered lists.
-    const fileChunks =
-      chunks.some((c) => c.kind === "position")
-        ? chunks
-        : [...chunks, ...parseProse(file.fileId, contentLines, extracted.pageInfo)];
+    const fileChunks = hasPositions
+      ? chunks
+      : [...chunks, ...parseProse(file.fileId, contentLines, extracted.pageInfo)];
     allChunks.push(...fileChunks);
 
     const legend = findModalityLegend(contentLines);
     const leaves = await buildLeaves(file.fileId, file.language, fileChunks, titles, groups, provider, legend, buildOpts);
     allLeaves.push(...leaves);
 
-    // General conditions from the preamble become obligations (Level-1 branch).
-    const pre = await extractPreamble(file, contentLines, extracted.pageInfo, provider, file.language);
+    // General conditions become obligations (Level-1 branch). For prose tenders
+    // this also covers the contractual sections beyond the numbered list.
+    const pre = await extractPreamble(
+      file, contentLines, extracted.pageInfo, provider, file.language, !hasPositions,
+    );
     allChunks.push(...pre.chunks);
     allLeaves.push(...pre.leaves);
   }
