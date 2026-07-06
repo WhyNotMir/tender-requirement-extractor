@@ -3,6 +3,9 @@ import { log } from "../logger";
 import type { CandidateLeaf, Chunk } from "../types/internal";
 import type { EnrichInput, EnrichResult, LlmProvider, Obligation } from "./provider";
 
+// OpenAI-compatible chat-completions provider. Configured via env
+// (LLM_BASE_URL / LLM_MODEL / LLM_API_KEY); currently runs on OpenAI gpt-4o-mini.
+
 const EnrichResponse = z.object({
   bulletPoint: z.string().min(1).max(240),
   description: z.string().min(1),
@@ -43,18 +46,18 @@ const ApiResponse = z.object({
     .optional(),
 });
 
-export interface DeepSeekConfig {
+export interface LlmConfig {
   apiKey: string;
   baseUrl?: string;
   model?: string;
 }
 
-// Approximate DeepSeek V4 Flash (deepseek-chat) rates, USD per 1M tokens.
-const RATE_INPUT = 0.14;
-const RATE_CACHED = 0.0028;
-const RATE_OUTPUT = 0.28;
+// Approximate rates, USD per 1M tokens. Indicative only — set for the configured model.
+const RATE_INPUT = 0.15;
+const RATE_CACHED = 0.075;
+const RATE_OUTPUT = 0.6;
 
-export class DeepSeekProvider implements LlmProvider {
+export class LlmHttpProvider implements LlmProvider {
   readonly name: string;
   private readonly apiKey: string;
   private readonly baseUrl: string;
@@ -62,11 +65,11 @@ export class DeepSeekProvider implements LlmProvider {
 
   readonly usage = { calls: 0, promptTokens: 0, cachedTokens: 0, completionTokens: 0 };
 
-  constructor(config: DeepSeekConfig) {
+  constructor(config: LlmConfig) {
     this.apiKey = config.apiKey;
-    this.baseUrl = (config.baseUrl ?? "https://api.deepseek.com").replace(/\/$/, "");
-    this.model = config.model ?? "deepseek-chat";
-    this.name = `deepseek:${this.model}`;
+    this.baseUrl = (config.baseUrl ?? "https://api.openai.com/v1").replace(/\/$/, "");
+    this.model = config.model ?? "gpt-4o-mini";
+    this.name = `llm:${this.model}`;
   }
 
   private async jsonCompletion<T>(
@@ -106,8 +109,7 @@ export class DeepSeekProvider implements LlmProvider {
       }
 
       // Rate limit / transient server errors -> back off and retry. Honor the
-      // Retry-After header, or the "try again in Xs" hint some providers put in
-      // the body (Groq's token-per-minute limit does this).
+      // Retry-After header, or a "try again in Xs" hint in the body.
       if ((response.status === 429 || response.status >= 500) && attempt < MAX_RETRIES) {
         const body = await response.text().catch(() => "");
         const headerRA = Number(response.headers.get("retry-after"));
@@ -125,10 +127,10 @@ export class DeepSeekProvider implements LlmProvider {
       const body = (await response!.text()).slice(0, 500);
       if (response!.status === 401) {
         throw new Error(
-          `DeepSeek rejected the API key (401). Check DEEPSEEK_API_KEY in env/.env — it may be wrong or expired. ${body}`,
+          `The API rejected the key (401). Check LLM_API_KEY in env/.env — it may be wrong or expired. ${body}`,
         );
       }
-      throw new Error(`DeepSeek API ${response!.status} ${response!.statusText}: ${body}`);
+      throw new Error(`LLM API ${response!.status} ${response!.statusText}: ${body}`);
     }
 
     const api = ApiResponse.parse(await response!.json());
@@ -141,22 +143,22 @@ export class DeepSeekProvider implements LlmProvider {
 
     const choice = api.choices[0]!;
     const content = choice.message.content?.trim();
-    if (!content) throw new Error("DeepSeek returned empty content");
+    if (!content) throw new Error("LLM returned empty content");
     if (choice.finish_reason === "length") {
-      throw new Error("DeepSeek JSON response was truncated; raise max_tokens or shrink the chunk");
+      throw new Error("LLM JSON response was truncated; raise max_tokens or shrink the chunk");
     }
 
     try {
       return schema.parse(JSON.parse(content));
     } catch (error) {
-      log.error(stage, "invalid structured response from DeepSeek", {
+      log.error(stage, "invalid structured response from LLM", {
         message: error instanceof Error ? error.message : String(error),
       });
-      throw new Error(`DeepSeek returned invalid JSON for ${stage}`);
+      throw new Error(`LLM returned invalid JSON for ${stage}`);
     }
   }
 
-  // Rough cost of the run so far, in USD, based on the model's published rates.
+  // Rough cost of the run so far, in USD, based on the configured model's rates.
   estimatedCostUsd(): number {
     const input = (this.usage.promptTokens - this.usage.cachedTokens) / 1e6 * RATE_INPUT;
     const cached = this.usage.cachedTokens / 1e6 * RATE_CACHED;

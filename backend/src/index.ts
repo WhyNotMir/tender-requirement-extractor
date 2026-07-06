@@ -16,7 +16,7 @@ import { resolveReferences } from "./pipeline/resolveReferences";
 import { assembleTree } from "./pipeline/assemble";
 import { validate } from "./pipeline/validate";
 import { StubProvider } from "./llm/stub";
-import { DeepSeekProvider } from "./llm/deepseek";
+import { LlmHttpProvider } from "./llm/httpProvider";
 import type { LlmProvider } from "./llm/provider";
 import type { Chunk, CandidateLeaf, Line } from "./types/internal";
 
@@ -37,14 +37,14 @@ try {
 
   let provider: LlmProvider;
   if (cfg.useLlm) {
-    const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
+    const apiKey = process.env.LLM_API_KEY?.trim();
     if (!apiKey) {
-      throw new Error("--use-llm requires DEEPSEEK_API_KEY in env/.env");
+      throw new Error("--use-llm requires LLM_API_KEY in env/.env");
     }
-    provider = new DeepSeekProvider({
+    provider = new LlmHttpProvider({
       apiKey,
-      baseUrl: process.env.DEEPSEEK_BASE_URL,
-      model: process.env.DEEPSEEK_MODEL,
+      baseUrl: process.env.LLM_BASE_URL,
+      model: process.env.LLM_MODEL,
     });
   } else {
     provider = new StubProvider();
@@ -55,7 +55,7 @@ try {
     outputDir: cfg.outputDir,
     useLlm: cfg.useLlm,
     provider: provider.name,
-    deepseekKey: process.env.DEEPSEEK_API_KEY?.trim() ? "present" : "missing",
+    apiKey: process.env.LLM_API_KEY?.trim() ? "present" : "missing",
   });
 
   const manifest = await ingest(cfg.inputDir);
@@ -109,7 +109,7 @@ try {
   await writeFile(join(outDir, "coverage-report.json"), JSON.stringify(report, null, 2));
   await writeFile(join(outDir, "references.json"), JSON.stringify(refReport, null, 2));
 
-  if (provider instanceof DeepSeekProvider) {
+  if (provider instanceof LlmHttpProvider) {
     log.info("run", "llm usage", {
       ...provider.usage,
       estimatedCostUsd: provider.estimatedCostUsd(),
