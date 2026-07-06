@@ -11,6 +11,7 @@ import { parseProse } from "./pipeline/parseProse";
 import { buildLeaves } from "./pipeline/leaves";
 import { extractPreamble } from "./pipeline/preamble";
 import { consolidate } from "./pipeline/consolidate";
+import { consolidateSemantic } from "./pipeline/consolidateSemantic";
 import { resolveReferences } from "./pipeline/resolveReferences";
 import { assembleTree } from "./pipeline/assemble";
 import { validate } from "./pipeline/validate";
@@ -92,8 +93,12 @@ try {
   }
 
   const consolidated = consolidate(allLeaves);
-  const refReport = resolveReferences(consolidated, allChunks, manifest);
-  const tree = assembleTree(consolidated);
+  // Semantic merge (LLM-verified) runs only when the LLM is on; stub is a no-op.
+  const deduped = cfg.useLlm
+    ? await consolidateSemantic(consolidated, provider, cfg.mergeMax)
+    : consolidated;
+  const refReport = resolveReferences(deduped, allChunks, manifest);
+  const tree = assembleTree(deduped);
   const report = validate(tree, allChunks);
 
   const outDir = join(cfg.outputDir, manifest.tenderId);
@@ -114,7 +119,7 @@ try {
   log.info("run", "done", {
     outDir,
     level1: tree.length,
-    leaves: consolidated.length,
+    leaves: deduped.length,
     schemaValid: report.schemaValid,
   });
 } catch (error) {

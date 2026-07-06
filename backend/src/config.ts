@@ -8,6 +8,7 @@ export interface RunConfig {
   useLlm: boolean;
   llmConcurrency: number;
   llmMax: number; // max LLM-enriched leaves for the whole run; Infinity = no cap
+  mergeMax: number; // max verifyMerge calls in semantic consolidation
 }
 
 // Load env/.env once, centrally, resolved relative to this file.
@@ -42,5 +43,6 @@ export function parseArgs(argv: string[]): RunConfig {
     useLlm: args.get("use-llm") === "true",
     llmConcurrency: Math.max(1, Number(args.get("llm-concurrency")) || 6),
     llmMax: args.has("llm-max") ? Number(args.get("llm-max")) : Infinity,
+    mergeMax: args.has("merge-max") ? Number(args.get("merge-max")) : 60,
   };
 }
