@@ -1,4 +1,4 @@
-import type { LlmProvider, EnrichInput, EnrichResult } from "./provider";
+import type { LlmProvider, EnrichInput, EnrichResult, Obligation } from "./provider";
 import type { CandidateLeaf, Chunk } from "../types/internal";
 
 // Deterministic, offline provider. It never invents content: it copies source
@@ -47,5 +47,23 @@ export class StubProvider implements LlmProvider {
   async verifyMerge(_leaf: CandidateLeaf, _candidate: Chunk): Promise<boolean> {
     // The stub only accepts merges already proven by exact-id / scope rules.
     return false;
+  }
+
+  // Deterministic obligation extraction: keep sentences carrying an explicit
+  // modal marker; never invents. The LLM provider does this far better.
+  async extractObligations(input: { text: string; language: string }): Promise<Obligation[]> {
+    const sentences = input.text.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim());
+    const seen = new Set<string>();
+    const out: Obligation[] = [];
+    for (const s of sentences) {
+      if (s.length < 25 || s.length > 400) continue;
+      if (!/\b(muss|müssen|sind zu|hat zu|verpflichtet|shall|must|is to be|are to be|required)\b/i.test(s)) continue;
+      const key = s.slice(0, 60).toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ bulletPoint: s.slice(0, 80), description: s, priority: "must" });
+      if (out.length >= 30) break;
+    }
+    return out;
   }
 }

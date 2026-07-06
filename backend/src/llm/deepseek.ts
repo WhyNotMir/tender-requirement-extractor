@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { log } from "../logger";
 import type { CandidateLeaf, Chunk } from "../types/internal";
-import type { EnrichInput, EnrichResult, LlmProvider } from "./provider";
+import type { EnrichInput, EnrichResult, LlmProvider, Obligation } from "./provider";
 
 const EnrichResponse = z.object({
   bulletPoint: z.string().min(1).max(240),
@@ -12,6 +12,18 @@ const EnrichResponse = z.object({
 });
 
 const MergeResponse = z.object({ merge: z.boolean() });
+
+const ObligationsResponse = z.object({
+  obligations: z
+    .array(
+      z.object({
+        bulletPoint: z.string().min(1).max(240),
+        description: z.string().min(1),
+        priority: z.enum(["must", "should", "optional"]),
+      }),
+    )
+    .max(100),
+});
 
 const ApiResponse = z.object({
   choices: z
@@ -186,5 +198,17 @@ export class DeepSeekProvider implements LlmProvider {
     ].join("\n");
     const result = await this.jsonCompletion("llm.verifyMerge", system, user, MergeResponse);
     return result.merge;
+  }
+
+  async extractObligations(input: { text: string; language: string }): Promise<Obligation[]> {
+    const system = [
+      "Extract every distinct obligation, requirement or condition the buyer imposes in the text.",
+      'Return valid JSON only: {"obligations":[{"bulletPoint":"short label","description":"faithful text","priority":"must|should|optional"}]}.',
+      "Only obligations actually stated — do not invent. Merge duplicates. Keep deadlines, standards, insurance, health & safety, and submission requirements.",
+      "priority: must=mandatory/contractual, should=preferred, optional=explicitly optional.",
+    ].join("\n");
+    const user = [`Source language: ${input.language}`, "TEXT:", input.text.slice(0, 12000)].join("\n");
+    const result = await this.jsonCompletion("llm.obligations", system, user, ObligationsResponse);
+    return result.obligations;
   }
 }

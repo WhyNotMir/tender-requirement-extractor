@@ -9,6 +9,7 @@ import { classify } from "./pipeline/classify";
 import { parseLv } from "./pipeline/parseLv";
 import { parseProse } from "./pipeline/parseProse";
 import { buildLeaves } from "./pipeline/leaves";
+import { extractPreamble } from "./pipeline/preamble";
 import { consolidate } from "./pipeline/consolidate";
 import { resolveReferences } from "./pipeline/resolveReferences";
 import { assembleTree } from "./pipeline/assemble";
@@ -80,10 +81,15 @@ try {
     const legend = findModalityLegend(contentLines);
     const leaves = await buildLeaves(file.fileId, file.language, fileChunks, titles, groups, provider, legend, buildOpts);
     allLeaves.push(...leaves);
+
+    // General conditions from the preamble become obligations (Level-1 branch).
+    const pre = await extractPreamble(file, contentLines, extracted.pageInfo, provider, file.language);
+    allChunks.push(...pre.chunks);
+    allLeaves.push(...pre.leaves);
   }
 
   const consolidated = consolidate(allLeaves);
-  const refReport = resolveReferences(consolidated, manifest);
+  const refReport = resolveReferences(consolidated, allChunks, manifest);
   const tree = assembleTree(consolidated);
   const report = validate(tree, allChunks);
 

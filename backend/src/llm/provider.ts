@@ -18,10 +18,19 @@ export interface EnrichResult {
   confidence: "high" | "medium" | "low";
 }
 
+// A single obligation extracted from free prose (preamble / general conditions).
+export interface Obligation {
+  bulletPoint: string;
+  description: string;
+  priority: "must" | "should" | "optional";
+}
+
 export interface LlmProvider {
   readonly name: string;
   // Enrich a single requirement chunk into the human-facing leaf fields.
   enrichLeaf(input: EnrichInput): Promise<EnrichResult>;
   // Verify a proposed consolidation merge (does the chunk belong to the leaf?).
   verifyMerge(leaf: CandidateLeaf, candidate: Chunk): Promise<boolean>;
+  // Extract obligations from unstructured text (general conditions / preamble).
+  extractObligations(input: { text: string; language: string }): Promise<Obligation[]>;
 }

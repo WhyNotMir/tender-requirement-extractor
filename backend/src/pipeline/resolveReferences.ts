@@ -1,5 +1,5 @@
 import { log } from "../logger";
-import type { CandidateLeaf, Manifest } from "../types/internal";
+import type { CandidateLeaf, Chunk, Manifest } from "../types/internal";
 
 // Cross-reference resolution. Two kinds:
 //  - internal: `Position "X"` -> attach that position's chunks onto this leaf.
@@ -16,15 +16,22 @@ export interface ReferenceReport {
   unresolved: { leafBulletPoint: string; reference: string }[];
 }
 
-export function resolveReferences(leaves: CandidateLeaf[], manifest: Manifest): ReferenceReport {
+export function resolveReferences(
+  leaves: CandidateLeaf[],
+  chunks: Chunk[],
+  manifest: Manifest,
+): ReferenceReport {
   const index = leaves.map((l) => ({ leaf: l, name: l.bulletPoint.toLowerCase() }));
   const hasAnnexFiles = manifest.files.some((f) => f.roleGuess === "annex");
+  // Scan the ORIGINAL source text (not the LLM-rephrased description), so
+  // reference detection is independent of enrichment wording.
+  const chunkText = new Map(chunks.map((c) => [c.id, c.text]));
 
   let internalResolved = 0;
   const unresolved: { leafBulletPoint: string; reference: string }[] = [];
 
   for (const leaf of leaves) {
-    const text = leaf.descriptionSource;
+    const text = leaf.chunkIds.map((id) => chunkText.get(id) ?? "").join("\n") || leaf.descriptionSource;
 
     for (const m of text.matchAll(RE_INTERNAL)) {
       const name = m[1]!.trim().toLowerCase();
