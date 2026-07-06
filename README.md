@@ -12,23 +12,35 @@ OpenAI-compatible endpoint (currently OpenAI `gpt-4o-mini`).
 
 Requirements: **Node ≥ 20**. Optional for OCR of corrupted pages: `poppler`
 (`pdftoppm`) and `tesseract` — on macOS `brew install poppler tesseract`.
-Without them the pipeline still runs; corrupted pages stay flagged instead of
-repaired.
+Without them the pipeline still runs; corrupted pages are flagged instead of repaired.
 
 ```bash
 npm install
-npm start -- --input "../<folder with the tender PDFs>" --output output
 ```
 
-That runs offline with a deterministic stub. To enable the LLM, copy
-`env/.env.example` to `env/.env`, add your key, and pass `--use-llm`:
+`--input` takes a **folder**, not a file (one tender = one folder; a tender may
+span several PDFs). Put the tender's PDF(s) in a folder and point `--input` at it:
 
 ```bash
-npm start -- --input ".." --use-llm --llm-concurrency 8
+# offline — deterministic stub, no API key
+npm start -- --input <tender-folder> --output output
 ```
 
-Provider is selected by `LLM_BASE_URL` + `LLM_MODEL` in `env/.env` (any
-OpenAI-compatible API), so switching models is config-only.
+Results are written to `output/<tenderId>/tree.json` (plus `chunks.json`,
+`manifest.json`, `coverage-report.json`, `references.json`).
+
+To use an LLM, copy `env/.env.example` to `env/.env`, add your key, then:
+
+```bash
+npm start -- --input <tender-folder> --output output --use-llm --llm-concurrency 8
+```
+
+The provider is any OpenAI-compatible API, set by `LLM_BASE_URL` + `LLM_MODEL` in
+`env/.env` (default: OpenAI `gpt-4o-mini`).
+
+> The three sample tenders are provided as single PDFs. Put each in its own
+> folder and run once per tender, or point `--input` at a folder holding several
+> PDFs to process them together as one tender.
 
 ### Flags
 
